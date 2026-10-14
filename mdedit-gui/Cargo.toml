@@ -1,0 +1,20 @@
+[package]
+name = "mdedit"
+version = "0.1.0"
+edition = "2021"
+description = "轻量 Markdown 编辑器 — 左侧编辑+语法高亮，右侧实时预览"
+license = "MIT"
+
+[[bin]]
+name = "mdedit"
+path = "src/main.rs"
+
+[dependencies]
+eframe = "0.29"
+egui = "0.29"
+pulldown-cmark = "0.12"
+rfd = "0.14"
+winreg = "0.55"
+
+[build-dependencies]
+embed-resource = "2"

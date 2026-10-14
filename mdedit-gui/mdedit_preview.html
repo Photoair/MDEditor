@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Markdown</title><style>body{max-width:860px;margin:30px auto;background:#fbfaf6;color:#333;font:15px/1.8 -apple-system,Segoe UI,Microsoft YaHei,sans-serif;padding:0 22px}#mdtbar{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;gap:5px;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:6px 8px;margin-bottom:16px}#mdtbar button{border:1px solid #e5e7eb;background:#fff;color:#333;border-radius:5px;padding:4px 10px;font:13px -apple-system,Segoe UI,Microsoft YaHei,sans-serif;cursor:pointer}#mdtbar button:hover{background:#f0f1f3}#preview[contenteditable="true"]{outline:none;min-height:60vh;border:1px solid transparent;border-radius:6px;padding:4px}#preview[contenteditable="true"]:focus{box-shadow:0 0 0 2px rgba(46,125,107,.22);border-color:rgba(46,125,107,.4)}#preview h1,#preview h2{border-bottom:1px solid #e5e7eb;padding-bottom:.3em;margin:.8em 0 .5em}#preview h1{font-size:1.6em}#preview h2{font-size:1.3em}#preview h3{font-size:1.1em}#preview h1:first-child,#preview h2:first-child,#preview h3:first-child{margin-top:.2em}#preview p{margin:.6em 0}#preview ul,#preview ol{margin:.6em 0;padding-left:1.6em}#preview li{margin:.15em 0}#preview li.task{list-style:none;margin-left:-1.3em}#preview code{font-family:ui-monospace,Consolas,monospace;font-size:.9em;background:#f3f4f6;padding:1px 5px;border-radius:4px}#preview pre{background:#282c34;color:#e6e6e6;padding:12px 14px;border-radius:8px;overflow:auto;margin:.8em 0}#preview pre code{background:none;color:inherit;padding:0}#preview blockquote{border-left:3px solid #2e7d6b;padding:.2em 1em;color:#555;background:#e7f3ef;border-radius:0 6px 6px 0;margin:.8em 0}#preview a{color:#2e7d6b;text-decoration:none}#preview a:hover{text-decoration:underline}#preview img{max-width:100%;border-radius:6px}#preview hr{border:none;border-top:2px dashed #e5e7eb;margin:1.4em 0}#preview table{border-collapse:collapse;margin:.8em 0;width:auto}#preview th,#preview td{border:1px solid #e5e7eb;padding:6px 12px}#preview th{background:#f0f1f3}#preview del{color:#6b7280}#preview input[type=checkbox]{margin-right:.4em;accent-color:#2e7d6b}</style></head><body><div id="preview"></div><script>
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function inline(s){
+  s=esc(s);
+  s=s.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+["'][^"']*["'])?\)/g,'<img src="$2" alt="$1">');
+  s=s.replace(/\[([^\]]+)\]\(([^)\s]+)(?:\s+["'][^"']*["'])?\)/g,'<a href="$2" target="_blank">$1</a>');
+  s=s.replace(/`([^`]+)`/g,'<code>$1</code>');
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/__([^_]+)__/g,'<strong>$1</strong>');
+  s=s.replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<em>$2</em>');
+  s=s.replace(/(^|[^_])_([^_\n]+)_/g,'$1<em>$2</em>');
+  s=s.replace(/~~([^~]+)~~/g,'<del>$1</del>');
+  return s;
+}
+function md(src){
+  src=(src||'').replace(/\r\n/g,'\n');
+  var lines=src.split('\n'),out=[],i=0,list=[],listType=null,inCode=false,codeBuf=[];
+  function closeList(){if(listType){out.push((listType==='ul'?'<ul>':'<ol>')+list.map(function(l){return '<li'+(l.task?' class="task"':'')+'>'+l.html+'</li>';}).join('')+'</'+listType+'>');list=[];listType=null;}}
+  for(;i<lines.length;i++){
+    var L=lines[i];
+    if(/^```/.test(L)){if(inCode){out.push('<pre><code>'+codeBuf.join('\n')+'</code></pre>');codeBuf=[];inCode=false;}else{closeList();inCode=true;}continue;}
+    if(inCode){codeBuf.push(L);continue;}
+    if(!L.trim()){closeList();if(i>0&&lines[i-1].trim())out.push('');continue;}
+    var h=L.match(/^(#{1,6})\s+(.*)/);
+    if(h){closeList();out.push('<h'+h[1].length+'>'+inline(h[2])+'</h'+h[1].length+'>');continue;}
+    if(/^\s*([-*_])\s*(\1\s*){2,}$/.test(L)){closeList();out.push('<hr>');continue;}
+    if(/^>\s?/.test(L)){closeList();var q=[],j=i;while(j<lines.length&&/^>/.test(lines[j])){q.push(lines[j].replace(/^>\s?/,''));j++;}out.push('<blockquote>'+inline(q.join('\n'))+'</blockquote>');i=j-1;continue;}
+    var tk=L.match(/^\s*[-*+]\s+\[( |x|X)\]\s+(.*)/);
+    if(tk){if(listType!=='ul'){closeList();listType='ul';}list.push({task:true,html:'<label><input type="checkbox"'+(tk[1].toLowerCase()==='x'?' checked':'')+' disabled> '+inline(tk[2])+'</label>'});continue;}
+    var ul=L.match(/^\s*[-*+]\s+(.*)/);
+    if(ul){if(listType!=='ul'){closeList();listType='ul';}list.push({task:false,html:inline(ul[1])});continue;}
+    var ol=L.match(/^\s*\d+[.)]\s+(.*)/);
+    if(ol){if(listType!=='ol'){closeList();listType='ol';}list.push({task:false,html:inline(ol[1])});continue;}
+    if(/^\s*\|/.test(L)||/^\s*\|.*\|\s*$/.test(L)){
+      var rows=[],j=i;
+      while(j<lines.length&&/^\s*\|/.test(lines[j])){rows.push(lines[j].trim());j++;}
+      if(rows.length>=2&&/^\s*\|?[\s:|-]+\|?\s*$/.test(rows[1])){
+        var head=rows[0].replace(/^\||\|$/g,'').split('|').map(function(c){return inline(c.trim());});
+        var body=rows.slice(2).map(function(r){return '<tr>'+r.replace(/^\||\|$/g,'').split('|').map(function(c){return '<td>'+inline(c.trim())+'</td>';}).join('')+'</tr>';}).join('');
+        closeList();out.push('<table><thead><tr>'+head.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr></thead><tbody>'+body+'</tbody></table>');
+        i=j-1;continue;
+      }
+    }
+    closeList();out.push('<p>'+inline(L)+'</p>');
+  }
+  closeList();if(inCode)out.push('<pre><code>'+codeBuf.join('\n')+'</code></pre>');
+  return out.join('\n');
+}
+document.getElementById('preview').innerHTML=md("# 欢迎使用 轻量 Markdown 编辑器\n\n这是一个用 **Rust** 编写的本地 Markdown 编辑器，**像 TXT 一样轻量**，即开即用。\n\n## 特性\n\n- 左侧编辑，网页预览\n- 语法高亮\n- 导出 HTML\n- 纯本地，单文件运行\n- 这些 发放大是\n\n[豆包](https://www.doubao.com) 和 [百度](https://www.baidu.com)\n\n## 图片\n\n![示例图片](https://picsum.photos/320/180)\n\n## 任务列表\n\n- - [x]  已完成的任务\n- - [ ]  待办事项\n- - [ ]  再记一件\n\n## 表格\n\n| 功能 | 说明 |\n| --- | --- |\n| 编辑 | 支持 Markdown 语法高亮 |\n| 预览 | 网页渲染 |\n| 导出 | 一键导出为 HTML |\n\n## 代码示例\n\n```\nfn main() {\n    println!(\"hello mdedit\");\n}\n```\n\n\u003e \n\n\u003e 提示：点击左上角「文件」菜单，可新建、打开、保存、网页预览文件。\n");</script><script>
+function htmlToMd(root){
+  var md='';
+  function children(n){for(var i=0;i<n.childNodes.length;i++)walk(n.childNodes[i]);}
+  function walk(node){
+    if(node.nodeType===3){md+=node.textContent;return;}
+    if(node.nodeType!==1)return;
+    var tag=node.tagName.toLowerCase();
+    if(tag==='h1'||tag==='h2'||tag==='h3'||tag==='h4'||tag==='h5'||tag==='h6'){md+='\n'+'#'.repeat(+tag[1])+' ';children(node);md+='\n\n';return;}
+    if(tag==='p'){children(node);md+='\n\n';return;}
+    if(tag==='pre'){md+='\n```\n'+node.innerText.replace(/^\n+/,'').replace(/\n+$/,'')+'\n```\n\n';return;}
+    if(tag==='ul'||tag==='ol'){
+      var prefix=tag==='ul'?'- ':'1. ';
+      var lis=node.children;
+      for(var i=0;i<lis.length;i++){
+        if(lis[i].tagName.toLowerCase()==='li'){
+          md+=prefix;children(lis[i]);md+='\n';
+        }
+      }
+      md+='\n';return;
+    }
+    if(tag==='blockquote'){md+='\n> '+node.innerText.replace(/\n/g,'\n> ')+'\n\n';return;}
+    if(tag==='table'){md+=tableToMd(node);return;}
+    if(tag==='hr'){md+='\n---\n\n';return;}
+    if(tag==='br'){md+='\n';return;}
+    if(tag==='strong'||tag==='b'){md+='**';children(node);md+='**';return;}
+    if(tag==='em'||tag==='i'){md+='*';children(node);md+='*';return;}
+    if(tag==='code'){md+='`';children(node);md+='`';return;}
+    if(tag==='del'||tag==='s'){md+='~~';children(node);md+='~~';return;}
+    if(tag==='a'){md+='[';children(node);md+=']('+node.getAttribute('href')+')';return;}
+    if(tag==='img'){md+='!['+(node.getAttribute('alt')||'')+']('+node.getAttribute('src')+')';return;}
+    if(tag==='input'&&node.type==='checkbox'){md+=node.checked?'- [x] ':'- [ ] ';return;}
+    children(node);
+  }
+  function tableToMd(t){
+    var rows=t.querySelectorAll('tr'),out=[];
+    rows.forEach(function(r,i){
+      var cells=r.querySelectorAll('th,td');
+      var cellsA=Array.prototype.slice.call(cells);
+      var line='|'+cellsA.map(function(c){return ' '+c.innerText.replace(/\|/g,'\\|').trim()+' ';}).join('|')+'|';
+      out.push(line);
+      if(i===0){out.push('|'+cellsA.map(function(){return ' --- ';}).join('|')+'|');}
+    });
+    return '\n'+out.join('\n')+'\n\n';
+  }
+  walk(root);
+  return md.replace(/\n{3,}/g,'\n\n').trim()+'\n';
+}
+(function(){
+  var p=document.getElementById('preview');if(!p)return;
+  var PORT=60954;
+  var syncTimer=null;
+  function doSync(){
+    if(!PORT)return;
+    var md=htmlToMd(p);
+    try{
+      fetch('http://127.0.0.1:'+PORT+'/save',{method:'POST',headers:{'Content-Type':'text/plain'},body:md}).catch(function(){});
+    }catch(e){}
+  }
+  var t=document.createElement('div');t.id='mdtbar';
+  // 编辑 / 预览 切换
+  var editing=false;
+  var modeBtn=document.createElement('button');
+  modeBtn.id='mdtmode';modeBtn.style.fontWeight='bold';
+  function setMode(m){
+    editing=(m==='edit');
+    p.contentEditable=editing?'true':'false';
+    fmtBar.style.display=editing?'inline-flex':'none';
+    modeBtn.textContent=editing?'预览':'编辑';
+  }
+  modeBtn.onclick=function(){setMode(editing?'preview':'edit');p.focus();};
+  t.appendChild(modeBtn);
+  // 格式按钮容器（仅编辑模式显示）
+  var fmtBar=document.createElement('span');
+  fmtBar.style.display='none';fmtBar.style.gap='5px';
+  var B=[['B','bold'],['I','italic'],['U','underline'],['S','strikeThrough'],
+    ['H1','formatBlock','H1'],['H2','formatBlock','H2'],['H3','formatBlock','H3'],
+    ['引用','formatBlock','BLOCKQUOTE'],['代码','formatBlock','PRE'],
+    ['无序','insertUnorderedList'],['有序','insertOrderedList'],
+    ['链接','link'],['撤销','undo'],['重做','redo'],['清除','removeFormat']];
+  B.forEach(function(x){
+    var b=document.createElement('button');b.textContent=x[0];
+    b.onclick=function(){
+      if(x[1]==='link'){var u=prompt('链接地址','https://');if(u)document.execCommand('createLink',false,u);}
+      else{document.execCommand(x[1],false,x[2]||null);}
+      p.focus();};
+    fmtBar.appendChild(b);
+  });
+  t.appendChild(fmtBar);
+  var sp=document.createElement('span');sp.style.flex='1';t.appendChild(sp);
+  document.body.insertBefore(t,document.body.firstChild);
+  p.addEventListener('input',function(){
+    if(!editing||!PORT)return;
+    clearTimeout(syncTimer);
+    syncTimer=setTimeout(doSync,800);
+  });
+  setMode('preview'); // 默认预览：只读不可编辑
+})();
+</script></body></html>
