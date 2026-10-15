@@ -9,5 +9,8 @@ target/
 Thumbs.db
 desktop.ini
 
+# 本地工作区数据（记忆、缓存等）
+.workbuddy/
+
 # 运行时临时文件
 mdedit-preview-*.html

@@ -28,18 +28,25 @@
 
 ## 下载与使用
 
-直接从本仓库获取已打包文件（`mdedit-gui/` 目录下）：
+**推荐从 [Releases](https://github.com/Photoair/MDEditor/releases/latest) 下载已打包的 Windows x64 文件：**
 
-| 文件 | 说明 |
-|------|------|
-| `mdedit.exe` | 绿色单文件版，双击即用 |
-| `MDEditor_setup_1.0.0.exe` | Inno Setup 安装包，含开始菜单/桌面快捷方式与 `.md` 关联 |
+| 文件 | 大小 | 说明 |
+|------|------|------|
+| **mdedit.exe** | 约 14 MB | **绿色单文件版（推荐）**，双击即用，无需安装、无需任何依赖 |
+| **MDEditor_setup_1.0.0.exe** | 约 5.7 MB | Inno Setup 安装包，含开始菜单/桌面快捷方式与 `.md` 文件关联 |
+
+直接下载链接（v1.0.0）：
+
+- https://github.com/Photoair/MDEditor/releases/download/v1.0.0/mdedit.exe
+- https://github.com/Photoair/MDEditor/releases/download/v1.0.0/MDEditor_setup_1.0.0.exe
 
 命令行带文件打开：
 
 ```
 mdedit.exe 文档.md
 ```
+
+> 仓库 `mdedit-gui/` 目录下也同时保留了这两个文件的副本，便于随源码一起查看。
 
 ## 快捷键
 
